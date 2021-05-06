@@ -2,9 +2,9 @@
 #include "cmath"
 #include "complex"
 
-void generate_image(sf::Image& image, int resolution, double interval_range, double h, double threshold, int max_iterations);
+void generate_image(sf::Image& image, int resolution, double interval_range, double h, int max_iterations);
 
-void generate_image(sf::Image& image, int resolution, double interval_range, double h, double threshold, int max_iterations)
+void generate_image(sf::Image& image, int resolution, double interval_range, double h, int max_iterations)
 {
 	image.create(resolution, resolution);
 	double imag = -interval_range / 2;
@@ -17,7 +17,7 @@ void generate_image(sf::Image& image, int resolution, double interval_range, dou
 			std::complex<double> c(real, imag);
 			std::complex<double> z;
 			sf::Uint8 n = 0;
-			while (abs(z) < threshold && n < max_iterations)
+			while (norm(z) < 4 && n < max_iterations)
 			{
 				z = z * z + c;
 				n += 1;
@@ -35,8 +35,7 @@ int main()
 	double interval_range = 4;
 	double h = interval_range / (1.0 * resolution);
 
-	double threshhold = 10000;
-	int max_iterations = 50;
+	int max_iterations = 30;
 
 	util::Platform platform;
 
@@ -47,7 +46,7 @@ int main()
 	window.create(sf::VideoMode(resolution * screenScalingFactor, resolution * screenScalingFactor), "SFML works!");
 	platform.setIcon(window.getSystemHandle());
 	sf::Image image;
-	generate_image(image, resolution, interval_range, h, threshhold, max_iterations);
+	generate_image(image, resolution, interval_range, h, max_iterations);
 
 	sf::Texture texture;
 	texture.loadFromImage(image);
