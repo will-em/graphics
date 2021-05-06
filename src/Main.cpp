@@ -1,29 +1,61 @@
 #include "Platform/Platform.hpp"
+#include "cmath"
+#include "complex"
+
+void generate_image(sf::Image& image, int resolution, double interval_range, double h, double threshold, int max_iterations);
+
+void generate_image(sf::Image& image, int resolution, double interval_range, double h, double threshold, int max_iterations)
+{
+	image.create(resolution, resolution);
+	double imag = -interval_range / 2;
+	double real = -interval_range / 2;
+	for (int i = 0; i < resolution; i++)
+	{
+		real = -interval_range / 2;
+		for (int j = 0; j < resolution; j++)
+		{
+			std::complex<double> c(real, imag);
+			std::complex<double> z;
+			sf::Uint8 n = 0;
+			while (abs(z) < threshold && n < max_iterations)
+			{
+				z = z * z + c;
+				n += 1;
+			}
+			image.setPixel(j, i, sf::Color(255 * n / max_iterations, 50 * n / max_iterations, 50 * n / max_iterations));
+			real += h;
+		}
+		imag += h;
+	}
+}
 
 int main()
 {
-	util::Platform platform;
+	int resolution = 800;
+	double interval_range = 4;
+	double h = interval_range / (1.0 * resolution);
 
-#if defined(_DEBUG)
-	std::cout << "Hello World!" << std::endl;
-#endif
+	double threshhold = 10000;
+	int max_iterations = 50;
+
+	util::Platform platform;
 
 	sf::RenderWindow window;
 	// in Windows at least, this must be called before creating the window
 	float screenScalingFactor = platform.getScreenScalingFactor(window.getSystemHandle());
 	// Use the screenScalingFactor
-	window.create(sf::VideoMode(200.0f * screenScalingFactor, 200.0f * screenScalingFactor), "SFML works!");
+	window.create(sf::VideoMode(resolution * screenScalingFactor, resolution * screenScalingFactor), "SFML works!");
 	platform.setIcon(window.getSystemHandle());
+	sf::Image image;
+	generate_image(image, resolution, interval_range, h, threshhold, max_iterations);
 
-	sf::CircleShape shape(window.getSize().x / 2);
-	shape.setFillColor(sf::Color::White);
+	sf::Texture texture;
+	texture.loadFromImage(image);
 
-	sf::Texture shapeTexture;
-	shapeTexture.loadFromFile("content/sfml.png");
-	shape.setTexture(&shapeTexture);
+	sf::Sprite sprite(texture);
 
 	sf::Event event;
-
+	window.clear();
 	while (window.isOpen())
 	{
 		while (window.pollEvent(event))
@@ -31,9 +63,7 @@ int main()
 			if (event.type == sf::Event::Closed)
 				window.close();
 		}
-
-		window.clear();
-		window.draw(shape);
+		window.draw(sprite);
 		window.display();
 	}
 
