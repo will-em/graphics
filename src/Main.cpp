@@ -7,25 +7,32 @@ void generate_image(sf::Image& image, int resolution, double interval_range, dou
 void generate_image(sf::Image& image, int resolution, double interval_range, double h, int max_iterations)
 {
 	image.create(resolution, resolution);
-	double imag = -interval_range / 2;
-	double real = -interval_range / 2;
+	double x0 = -interval_range / 2;
+	double y0 = -interval_range / 2;
+	double x, y, x2, y2;
 	for (int i = 0; i < resolution; i++)
 	{
-		real = -interval_range / 2;
+		x0 = -interval_range / 2;
+
 		for (int j = 0; j < resolution; j++)
 		{
-			std::complex<double> c(real, imag);
-			std::complex<double> z;
+			x = 0.0;
+			y = 0.0;
+			x2 = 0.0;
+			y2 = 0.0;
 			sf::Uint8 n = 0;
-			while (norm(z) < 4 && n < max_iterations)
+			while (x * x + y * y <= 4 && n < max_iterations)
 			{
-				z = z * z + c;
+				y = 2 * x * y + y0;
+				x = x2 - y2 + x0;
+				x2 = x * x;
+				y2 = y * y;
 				n += 1;
 			}
 			image.setPixel(j, i, sf::Color(255 * n / max_iterations, 50 * n / max_iterations, 50 * n / max_iterations));
-			real += h;
+			x0 += h;
 		}
-		imag += h;
+		y0 += h;
 	}
 }
 
