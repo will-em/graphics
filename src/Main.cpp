@@ -1,6 +1,5 @@
 #include "Platform/Platform.hpp"
 #include "cmath"
-#include "complex"
 
 void generate_image(sf::Image& image, int width, int height, std::vector<double> interval, int max_iterations);
 
