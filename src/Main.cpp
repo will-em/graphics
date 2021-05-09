@@ -16,6 +16,7 @@ void generate_image(sf::Image& image, std::vector<double> interval, int max_iter
 	double x0 = interval.at(0);
 	double y0 = interval.at(2);
 	double x, y, x2, y2;
+	bool symmetry;
 
 	std::array<std::array<sf::Uint8, height>, width> n_arr;
 	auto start = high_resolution_clock::now();
@@ -23,8 +24,16 @@ void generate_image(sf::Image& image, std::vector<double> interval, int max_iter
 	{
 		x0 = interval.at(0);
 
+		symmetry = y0 > 0.0 && -y0 >= interval.at(2);
+
 		for (int j = 0; j < width; j++)
 		{
+			if (symmetry)
+			{
+				int index = (int)((-y0 - interval.at(2)) / h_y);
+				n_arr[j][i] = n_arr[j][index];
+				continue;
+			}
 			x = 0.0;
 			y = 0.0;
 			x2 = 0.0;
