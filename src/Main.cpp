@@ -139,7 +139,6 @@ int main()
 
 						init_x = event.mouseMove.x;
 						init_y = event.mouseMove.y;
-						std::cout << 1000.0 * (interval.at(1) - interval.at(0)) * delta_x / (2.0 * width) << std::endl;
 						generate_image(image, interval, max_iterations);
 						texture.loadFromImage(image);
 						sf::Sprite sprite(texture);
