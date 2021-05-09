@@ -1,9 +1,14 @@
 #include "Platform/Platform.hpp"
 #include "cmath"
+#include <chrono>
+using namespace std::chrono;
 
-void generate_image(sf::Image& image, int width, int height, std::vector<double> interval, int max_iterations);
+#define height 600
+#define width 900
 
-void generate_image(sf::Image& image, int width, int height, std::vector<double> interval, int max_iterations)
+void generate_image(sf::Image& image, std::vector<double> interval, int max_iterations);
+
+void generate_image(sf::Image& image, std::vector<double> interval, int max_iterations)
 {
 	double h_x = (interval.at(1) - interval.at(0)) / (1.0 * width);
 	double h_y = (interval.at(3) - interval.at(2)) / (1.0 * height);
@@ -11,6 +16,9 @@ void generate_image(sf::Image& image, int width, int height, std::vector<double>
 	double x0 = interval.at(0);
 	double y0 = interval.at(2);
 	double x, y, x2, y2;
+
+	//std::vector<sf::Uint8, std::vector<sf::Uint8>> pixels(height, std::vector<sf::Utf8>(width));
+
 	for (int i = 0; i < height; i++)
 	{
 		x0 = interval.at(0);
@@ -41,13 +49,11 @@ void generate_image(sf::Image& image, int width, int height, std::vector<double>
 
 int main()
 {
-	int height = 600;
-	int width = 900;
 	double zoom = 1.05;
 	double sensitivity = 1.0;
 	std::vector<double> interval = { -2, 1, -1, 1 }; //x_start, x_end, y_start, y_end
 
-	int max_iterations = 30;
+	int max_iterations = 100;
 
 	util::Platform platform;
 
@@ -58,7 +64,7 @@ int main()
 	window.create(sf::VideoMode(width * screenScalingFactor, height * screenScalingFactor), "SFML works!");
 	platform.setIcon(window.getSystemHandle());
 	sf::Image image;
-	generate_image(image, width, height, interval, max_iterations);
+	generate_image(image, interval, max_iterations);
 
 	sf::Texture texture;
 	texture.loadFromImage(image);
@@ -108,7 +114,7 @@ int main()
 						init_x = event.mouseMove.x;
 						init_y = event.mouseMove.y;
 						std::cout << 1000.0 * (interval.at(1) - interval.at(0)) * delta_x / (2.0 * width) << std::endl;
-						generate_image(image, width, height, interval, max_iterations);
+						generate_image(image, interval, max_iterations);
 						texture.loadFromImage(image);
 						sf::Sprite sprite(texture);
 					}
@@ -136,7 +142,7 @@ int main()
 				interval.at(2) -= mouse_y_after - mouse_y_before;
 				interval.at(3) -= mouse_y_after - mouse_y_before;
 
-				generate_image(image, width, height, interval, max_iterations);
+				generate_image(image, interval, max_iterations);
 				texture.loadFromImage(image);
 				sf::Sprite sprite(texture);
 			}
