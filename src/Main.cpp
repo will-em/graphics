@@ -17,8 +17,8 @@ void generate_image(sf::Image& image, std::vector<double> interval, int max_iter
 	double y0 = interval.at(2);
 	double x, y, x2, y2;
 
-	//std::vector<sf::Uint8, std::vector<sf::Uint8>> pixels(height, std::vector<sf::Utf8>(width));
-
+	std::array<std::array<sf::Uint8, height>, width> n_arr;
+	auto start = high_resolution_clock::now();
 	for (int i = 0; i < height; i++)
 	{
 		x0 = interval.at(0);
@@ -39,12 +39,29 @@ void generate_image(sf::Image& image, std::vector<double> interval, int max_iter
 				n += 1;
 			}
 
-			image.setPixel(j, i, sf::Color(255 * n / max_iterations, 50 * n / max_iterations, 50 * n / max_iterations));
+			n_arr[j][i] = n;
 
 			x0 += h_x;
 		}
 		y0 += h_y;
 	}
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<microseconds>(stop - start);
+	std::cout << "First loop " << duration.count() << std::endl;
+	start = high_resolution_clock::now();
+	sf::Uint8 n;
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			n = n_arr[j][i];
+			image.setPixel(j, i, sf::Color(255 * n / max_iterations, 50 * n / max_iterations, 50 * n / max_iterations));
+		}
+	}
+	stop = high_resolution_clock::now();
+	duration = duration_cast<microseconds>(stop - start);
+
+	std::cout << "Second loop " << duration.count() << std::endl;
 }
 
 int main()
