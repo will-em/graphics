@@ -7,6 +7,7 @@ using namespace std::chrono;
 #define width 900
 
 void generate_image(sf::Image& image, std::vector<double> interval, int max_iterations);
+void panning(std::vector<double>& interval, double sensitivity, int mouse_x, int mouse_y, int& init_x, int& init_y);
 
 void generate_image(sf::Image& image, std::vector<double> interval, int max_iterations)
 {
@@ -75,6 +76,18 @@ void generate_image(sf::Image& image, std::vector<double> interval, int max_iter
 	delete[] pixels;
 }
 
+void panning(std::vector<double>& interval, double sensitivity, int mouse_x, int mouse_y, int& init_x, int& init_y)
+{
+	double delta_x = mouse_x - init_x;
+	double delta_y = mouse_y - init_y;
+	interval.at(0) -= sensitivity * (interval.at(1) - interval.at(0)) * delta_x / (2.0 * width);
+	interval.at(1) -= sensitivity * (interval.at(1) - interval.at(0)) * delta_x / (2.0 * width);
+	interval.at(2) += sensitivity * (interval.at(3) - interval.at(2)) * delta_y / (2.0 * height);
+	interval.at(3) += sensitivity * (interval.at(3) - interval.at(2)) * delta_y / (2.0 * height);
+
+	init_x = mouse_x;
+	init_y = mouse_y;
+}
 int main()
 {
 	double zoom = 1.05;
@@ -131,15 +144,7 @@ int main()
 				{
 					if (event.mouseMove.x != init_x || event.mouseMove.y != init_y) //Panning
 					{
-						double delta_x = event.mouseMove.x - init_x;
-						double delta_y = event.mouseMove.y - init_y;
-						interval.at(0) -= sensitivity * (interval.at(1) - interval.at(0)) * delta_x / (2.0 * width);
-						interval.at(1) -= sensitivity * (interval.at(1) - interval.at(0)) * delta_x / (2.0 * width);
-						interval.at(2) += sensitivity * (interval.at(3) - interval.at(2)) * delta_y / (2.0 * height);
-						interval.at(3) += sensitivity * (interval.at(3) - interval.at(2)) * delta_y / (2.0 * height);
-
-						init_x = event.mouseMove.x;
-						init_y = event.mouseMove.y;
+						panning(interval, sensitivity, event.mouseMove.x, event.mouseMove.y, init_x, init_y);
 						generate_image(image, interval, max_iterations);
 						texture.loadFromImage(image);
 						sf::Sprite sprite(texture);
