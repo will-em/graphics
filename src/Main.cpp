@@ -89,7 +89,7 @@ int main()
 	// in Windows at least, this must be called before creating the window
 	float screenScalingFactor = platform.getScreenScalingFactor(window.getSystemHandle());
 	// Use the screenScalingFactor
-	window.create(sf::VideoMode(width * screenScalingFactor, height * screenScalingFactor), "SFML works!");
+	window.create(sf::VideoMode(width * screenScalingFactor, height * screenScalingFactor), "Mandelbrot");
 	platform.setIcon(window.getSystemHandle());
 	sf::Image image;
 	generate_image(image, interval, max_iterations);
