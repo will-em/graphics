@@ -1,6 +1,7 @@
 #include "Platform/Platform.hpp"
-#include "cmath"
 #include <chrono>
+#include <cmath>
+#include <thread>
 using namespace std::chrono;
 
 #define height 600
@@ -17,10 +18,10 @@ void generate_image(sf::Image& image, std::vector<double> interval, int max_iter
 	double y0 = interval.at(3);
 	double x, y, x2, y2;
 	bool symmetry;
-	sf::Uint8* pixels;
-	pixels = new sf::Uint8[4 * width * height]; // Multiplied by 4 because of RGBA
+	sf::Uint8* pixels = new sf::Uint8[4 * width * height * 16]; // Multiplied by 4 because of RGBA
 	int index = 0;
 	auto start = high_resolution_clock::now();
+#pragma omp parallel for
 	for (int i = 0; i < height; i++)
 	{
 		x0 = interval.at(0);
@@ -29,7 +30,7 @@ void generate_image(sf::Image& image, std::vector<double> interval, int max_iter
 
 		for (int j = 0; j < width; j++)
 		{
-			if (symmetry)
+			if (symmetry) // Utilize symmetry
 			{
 				int reflected_y_index = (int)(-1.0 + (-y0 - interval.at(3)) / h_y);
 				int reflected_index = j + width * reflected_y_index;
@@ -38,29 +39,40 @@ void generate_image(sf::Image& image, std::vector<double> interval, int max_iter
 				pixels[index + 2] = pixels[4 * reflected_index + 2];
 				pixels[index + 3] = pixels[4 * reflected_index + 3];
 			}
-			else
+			else // Escape algorithm
 			{
-				x = 0.0;
-				y = 0.0;
-				x2 = 0.0;
-				y2 = 0.0;
-				int n = 0;
-				while (x * x + y * y <= 4 && n < max_iterations)
+				double p = sqrt((x0 - 0.25) * (x0 - 0.25) + y0 * y0);
+				if (x0 <= p - 2 * p * p + 0.25 || (x0 + 1) * (x0 + 1) + y0 * y0 <= 0.0625)
 				{
-					y = 2 * x * y + y0;
-					x = x2 - y2 + x0;
-					x2 = x * x;
-					y2 = y * y;
-					n += 1;
+					pixels[index] = (int)(255.0);
+					pixels[index + 1] = (int)(50.0);
+					pixels[index + 2] = (int)(50.0);
+					pixels[index + 3] = 255;
 				}
+				else
+				{
+					x = 0.0;
+					y = 0.0;
+					x2 = 0.0;
+					y2 = 0.0;
+					int n = 0;
+					while (x * x + y * y <= 4 && n < max_iterations)
+					{
+						y = 2 * x * y + y0;
+						x = x2 - y2 + x0;
+						x2 = x * x;
+						y2 = y * y;
+						n += 1;
+					}
 
-				pixels[index] = (int)(255.0 * n / 1.0 * max_iterations);
-				pixels[index + 1] = (int)(50.0 * n / 1.0 * max_iterations);
-				pixels[index + 2] = (int)(50.0 * n / 1.0 * max_iterations);
-				pixels[index + 3] = 255;
-
+					pixels[index] = (int)(255.0 * n / 1.0 * max_iterations);
+					pixels[index + 1] = (int)(50.0 * n / 1.0 * max_iterations);
+					pixels[index + 2] = (int)(50.0 * n / 1.0 * max_iterations);
+					pixels[index + 3] = 255;
+				}
 				x0 += h_x;
 			}
+
 			index += 4;
 		}
 		y0 += h_y;
