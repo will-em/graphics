@@ -7,21 +7,17 @@ using namespace std::chrono;
 #define height 600
 #define width 900
 
-void generate_image(sf::Image& image, std::vector<double> interval, int max_iterations);
-void panning(std::vector<double>& interval, double sensitivity, int mouse_x, int mouse_y, int& init_x, int& init_y);
-
 void generate_image(sf::Image& image, std::vector<double> interval, int max_iterations)
 {
+
 	double h_x = (interval.at(1) - interval.at(0)) / (1.0 * width);
 	double h_y = (interval.at(2) - interval.at(3)) / (1.0 * height);
-	double x0 = interval.at(0);
-	double y0 = interval.at(3);
+	double x0 = interval.at(0), y0 = interval.at(3);
 	double x, y, x2, y2;
 	bool symmetry;
 	sf::Uint8* pixels = new sf::Uint8[4 * width * height * 16]; // Multiplied by 4 because of RGBA
 	int index = 0;
 	auto start = high_resolution_clock::now();
-#pragma omp parallel for
 	for (int i = 0; i < height; i++)
 	{
 		x0 = interval.at(0);
@@ -42,6 +38,7 @@ void generate_image(sf::Image& image, std::vector<double> interval, int max_iter
 			else // Escape algorithm
 			{
 				double p = sqrt((x0 - 0.25) * (x0 - 0.25) + y0 * y0);
+				// Check if inside cardioid or period-2 bulb
 				if (x0 <= p - 2 * p * p + 0.25 || (x0 + 1) * (x0 + 1) + y0 * y0 <= 0.0625)
 				{
 					pixels[index] = (int)(255.0);
@@ -51,10 +48,8 @@ void generate_image(sf::Image& image, std::vector<double> interval, int max_iter
 				}
 				else
 				{
-					x = 0.0;
-					y = 0.0;
-					x2 = 0.0;
-					y2 = 0.0;
+					x = y = x2 = y2 = 0.0;
+
 					int n = 0;
 					while (x * x + y * y <= 4 && n < max_iterations)
 					{
@@ -92,6 +87,7 @@ void panning(std::vector<double>& interval, double sensitivity, int mouse_x, int
 {
 	double delta_x = mouse_x - init_x;
 	double delta_y = mouse_y - init_y;
+
 	interval.at(0) -= sensitivity * (interval.at(1) - interval.at(0)) * delta_x / (2.0 * width);
 	interval.at(1) -= sensitivity * (interval.at(1) - interval.at(0)) * delta_x / (2.0 * width);
 	interval.at(2) += sensitivity * (interval.at(3) - interval.at(2)) * delta_y / (2.0 * height);
@@ -100,13 +96,32 @@ void panning(std::vector<double>& interval, double sensitivity, int mouse_x, int
 	init_x = mouse_x;
 	init_y = mouse_y;
 }
+void zoom(std::vector<double>& interval, double zoom_factor, int mouse_x, int mouse_y)
+{
+	double mouse_x_before = interval.at(0) + (interval.at(1) - interval.at(0)) * mouse_x / (1.0 * width);
+	double mouse_y_before = interval.at(3) + (interval.at(2) - interval.at(3)) * mouse_y / (1.0 * height);
+
+	//Zoom
+	interval.at(0) /= zoom_factor;
+	interval.at(1) /= zoom_factor;
+	interval.at(2) /= zoom_factor;
+	interval.at(3) /= zoom_factor;
+
+	double mouse_x_after = interval.at(0) + (interval.at(1) - interval.at(0)) * mouse_x / (1.0 * width);
+	double mouse_y_after = interval.at(3) + (interval.at(2) - interval.at(3)) * mouse_y / (1.0 * height);
+
+	//Correction
+	interval.at(0) -= mouse_x_after - mouse_x_before;
+	interval.at(1) -= mouse_x_after - mouse_x_before;
+	interval.at(2) -= mouse_y_after - mouse_y_before;
+	interval.at(3) -= mouse_y_after - mouse_y_before;
+}
 int main()
 {
-	double zoom = 1.05;
+	double zoom_factor = 1.1;
 	double sensitivity = 1.0;
+	int max_iterations = 1000;
 	std::vector<double> interval = { -2, 1, -1, 1 }; //x_start, x_end, y_start, y_end
-
-	int max_iterations = 100;
 
 	util::Platform platform;
 
@@ -166,26 +181,7 @@ int main()
 
 			if (event.type == sf::Event::MouseWheelMoved)
 			{
-				double zoom_factor = (event.mouseWheelScroll.delta > 0) ? (zoom) : (1.0 / zoom);
-				double mouse_x_before = interval.at(0) + (interval.at(1) - interval.at(0)) * event.mouseWheel.x / (1.0 * width);
-				double mouse_y_before = interval.at(3) + (interval.at(2) - interval.at(3)) * event.mouseWheel.y / (1.0 * height);
-				std::cout << mouse_x_before << std::endl;
-				std::cout << mouse_y_before << std::endl;
-				//Zoom
-				interval.at(0) /= zoom_factor;
-				interval.at(1) /= zoom_factor;
-				interval.at(2) /= zoom_factor;
-				interval.at(3) /= zoom_factor;
-
-				double mouse_x_after = interval.at(0) + (interval.at(1) - interval.at(0)) * event.mouseWheel.x / (1.0 * width);
-				double mouse_y_after = interval.at(3) + (interval.at(2) - interval.at(3)) * event.mouseWheel.y / (1.0 * height);
-
-				//Correction
-				interval.at(0) -= mouse_x_after - mouse_x_before;
-				interval.at(1) -= mouse_x_after - mouse_x_before;
-				interval.at(2) -= mouse_y_after - mouse_y_before;
-				interval.at(3) -= mouse_y_after - mouse_y_before;
-
+				zoom(interval, zoom_factor, event.mouseWheel.x, event.mouseWheel.y);
 				generate_image(image, interval, max_iterations);
 				texture.loadFromImage(image);
 				sf::Sprite sprite(texture);
