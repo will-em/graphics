@@ -36,10 +36,10 @@ void generate_image(sf::Image& image, std::vector<double> interval, int max_iter
 			{
 				int reflected_y_index = (int)(-1.0 + (-y0 - interval.at(3)) / h_y);
 				int reflected_index = j + width * reflected_y_index;
-				pixels[index] = pixels[4 * reflected_index];
-				pixels[index + 1] = pixels[4 * reflected_index + 1];
-				pixels[index + 2] = pixels[4 * reflected_index + 2];
-				pixels[index + 3] = pixels[4 * reflected_index + 3];
+				pixels[index] = pixels[4 * reflected_index];		 // R
+				pixels[index + 1] = pixels[4 * reflected_index + 1]; // G
+				pixels[index + 2] = pixels[4 * reflected_index + 2]; // B
+				pixels[index + 3] = 255;							 // A
 			}
 			else // Escape algorithm
 			{
@@ -47,10 +47,10 @@ void generate_image(sf::Image& image, std::vector<double> interval, int max_iter
 				// Check if inside cardioid or period-2 bulb
 				if (x0 <= p - 2 * p * p + 0.25 || (x0 + 1) * (x0 + 1) + y0 * y0 <= 0.0625)
 				{
-					pixels[index] = (int)(255.0);
-					pixels[index + 1] = (int)(50.0);
-					pixels[index + 2] = (int)(50.0);
-					pixels[index + 3] = 255;
+					pixels[index] = (int)(255.0);	 // R
+					pixels[index + 1] = (int)(50.0); // G
+					pixels[index + 2] = (int)(50.0); // B
+					pixels[index + 3] = 255;		 // A
 				}
 				else
 				{
