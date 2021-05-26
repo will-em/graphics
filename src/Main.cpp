@@ -7,6 +7,8 @@ using namespace std::chrono;
 #define height 600
 #define width 900
 
+void generate_image(sf::Image& image, std::vector<double> interval, int max_iterations);
+void panning(std::vector<double>& interval, double sensitivity, int mouse_x, int mouse_y, int& init_x, int& init_y);
 void generate_image(sf::Image& image, std::vector<double> interval, int max_iterations)
 {
 
